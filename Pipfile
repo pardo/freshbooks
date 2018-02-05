@@ -1,0 +1,15 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+
+[dev-packages]
+web-pdb = "*"
+
+[packages]
+requests = "*"
+xmltodict = "*"
+npyscreen = "*"
+easydict = "*"
+ipdb = "*"
+ipython = "*"
+web-pdb = "*"
