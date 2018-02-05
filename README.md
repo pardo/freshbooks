@@ -3,5 +3,6 @@
 
 add your api endpoint and key to the settings.py file
 
-`pipenv install`
-`pipenv run python freshbooks.py`
+    sudo -H pip3 install pipenv
+    pipenv --three install
+    pipenv run python freshbooks.py
