@@ -185,7 +185,8 @@ class TimeEntry(object):
             except Exception:
                 print("Retrying")
                 time.sleep(1)
-        
+        if r.status_code != 200:
+            raise Exception
         #if self.time_entry_id is not None:
             #print("Time entry updated ", self.time_entry_id)
         #else:
@@ -301,12 +302,15 @@ class TimeEntryForm(npyscreen.ActionForm):
         self.notes = self.add(npyscreen.MultiLineEdit, value="""Notes here...\n""", max_height=10, rely=7, )
 
     def on_ok(self):
-        self.time_entry.project_id = self.project.get_choice_value()[0]
-        self.time_entry.task_id = self.task.get_choice_value()[0]
-        self.time_entry.hours = self.hours.value
-        self.time_entry.notes = self.notes.value
-        self.time_entry.date = self.date.value
-        self.time_entry.save()
+        try:
+            self.time_entry.project_id = self.project.get_choice_value()[0]            
+            self.time_entry.task_id = self.task.get_choice_value()[0]
+            self.time_entry.hours = self.hours.value
+            self.time_entry.notes = self.notes.value
+            self.time_entry.date = self.date.value
+            self.time_entry.save()
+        except Exception:
+            self.editing = True
 
 
 class KeyValueGrid(npyscreen.SimpleGrid):
