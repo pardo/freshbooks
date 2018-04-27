@@ -473,50 +473,81 @@ class TestApp(npyscreen.NPSApp):
         self.edit(te)
 
 
+def show_page(projects, tasks, time_entries):
+    print("---------------")
+    today = time_entries[0].date.day if time_entries else 0
+
+    time_worked_in_the_day = 0
+    for idx, te in enumerate(time_entries, 1):
+        if today != te.date.day:
+            print("--------------- worked %s hours" % (time_worked_in_the_day,))
+            print("")
+            time_worked_in_the_day = 0
+            today = te.date.day
+        time_worked_in_the_day += te.hours
+        
+        print(
+            "(%s) %s %s %s %sh" % (
+                idx,
+                te.date.strftime("%d %B, %Y"),
+                projects.get(te.project_id),
+                tasks.get(te.task_id),
+                te.hours
+            )
+        )
+
+    if time_worked_in_the_day > 0:
+        print("--------------- worked %s hours" % (time_worked_in_the_day,))
+        print("")
+        time_worked_in_the_day = 0
+        today = te.date.day
+    print("(p) Show newer entries")
+    print("(n) Show older entries")
+    print("(t) Show recent entries")
+    print("(0) To add an entry")
+    
+
 if __name__ == "__main__":
+    print("Loading Projects...")
     projects = get_projects(as_dict=True)
     tasks = dict(get_tasks())
     app = TestApp()
+    page = 0
+    page_size = 7  # in days
+    today = datetime.datetime.today()
 
     while True:
+        print("Loading Time Entries...")
         app.edit_time_entry_id = None
-        today = datetime.datetime.today()
+        date_from = today - datetime.timedelta(days=page_size+(page_size*page))
+        date_to = today - datetime.timedelta(days=page_size*page)
+        time_entries = get_time_entry_list(
+            date_from=date_from,
+            date_to=date_to,
+        )
         clear()
-        print("Today is %s" % today.isoformat())
-        print("0 - Add")
+        print("Showing from %s to %s" % (
+            date_to.strftime("%d %B, %Y"),
+            date_from.strftime("%d %B, %Y")
+        ))
+        print("")
+        show_page(projects, tasks, time_entries)
 
-        month_start = datetime.date(today.year, today.month, 1)
-        time_entries = get_time_entry_list(date_from=today-datetime.timedelta(days=6), date_to=today)
+        user_input = input(">")
+        if user_input == "p":
+            page -= 1
+        elif user_input == "n":
+            page += 1
+        elif user_input == "t":
+            page = 0
+        else:
+            try:
+                entry = int(user_input)
+            except:
+                print("invalid option quitting")
+                sys.exit(0)
 
-        print("---------------")
-        today = time_entries[0].date.day if time_entries else 0
-
-        day_hours = 0
-        for idx, te in enumerate(time_entries, 1):
-            if today != te.date.day:
-                print("--------------- worked %s hours" % (day_hours,))
-                print("")
-                day_hours = 0
-                today = te.date.day
-            day_hours += te.hours
-            print(
-                "%s - %s %s %s %sh (%s)" % (
-                    idx,
-                    te.date.strftime("%d %B, %Y"),
-                    projects.get(te.project_id),
-                    tasks.get(te.task_id),
-                    te.hours,
-                    te.time_entry_id
-                )
-            )
-
-        try:
-            entry = int(input(">"))
-        except:
-            print("------ done ------")
-            sys.exit(0)
-
-        if entry > 0:
-            app.edit_time_entry_id = time_entries[entry-1].time_entry_id
-
-        app.run()
+            app.edit_time_entry_id = None
+            if entry > 0:
+                app.edit_time_entry_id = time_entries[entry-1].time_entry_id
+            app.run()
